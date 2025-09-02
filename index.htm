@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจองรถส่วนกลางขององค์การบริหารส่วนจังหวัด</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .container { max-width: 600px; margin: auto; }
+        label { display: block; margin-top: 10px; }
+        select, input { width: 100%; padding: 8px; margin-top: 5px; }
+        button { margin-top: 15px; padding: 10px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        .status { margin-top: 15px; font-weight: bold; }
+        .booked { color: red; }
+        .available { color: green; }
+        .booking-list { margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px; }
+        .booking-item { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee; }
+        .booking-left { display: flex; align-items: center; }
+        .booking-item img { width: 50px; height: 50px; object-fit: cover; margin-right: 10px; border-radius: 5px; }
+        .booking-info { display: flex; flex-direction: column; }
+        .cancel-btn { background-color: #e74c3c; color: white; padding: 5px 10px; border: none; border-radius: 5px; cursor: pointer; }
+        .cancel-btn:hover { background-color: #c0392b; }
+        .logo { text-align:center; margin-bottom:15px; }
+        .logo img { width:80px; height:auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- โลโก้ตัวอย่าง -->
+        <div class="logo">
+            <img src="https://via.placeholder.com/80" alt="โลโก้ อบจ.">
+        </div>
+
+        <h2>ระบบจองรถส่วนกลางขององค์การบริหารส่วนจังหวัด</h2>
+
+        <label for="driver">เลือกคนขับ:</label>
+        <select id="driver">
+            <option value="">-- เลือกคนขับ --</option>
+            <option value="เบสร้อยกิ๊ก" data-img="https://i.pravatar.cc/50?img=1" data-phone="081-111-1111">เบสร้อยกิ๊ก</option>
+            <option value="โฟคร้อยเมีย" data-img="รูปภาพ/bes.jpg" data-phone="082-222-2222">โฟคร้อยเมีย</option>
+            <option value="ตะวันคนดีสุดๆ" data-img="https://i.pravatar.cc/50?img=3" data-phone="083-333-3333">ตะวันคนดีสุดๆ</option>
+            <option value="คิมคนรักเมีย" data-img="https://i.pravatar.cc/50?img=4" data-phone="084-444-4444">คิมคนรักเมีย</option>
+            <option value="เติ้ล15promax" data-img="https://i.pravatar.cc/50?img=5" data-phone="085-555-5555">เติ้ล15promax</option>
+            <option value="เบียร์ส้มโอ" data-img="https://i.pravatar.cc/50?img=6" data-phone="086-666-6666">เบียร์ส้มโอ</option>
+        </select>
+
+        <label for="car">เลือกรถ:</label>
+        <select id="car">
+            <option value="">-- เลือกรถ --</option>
+            <option value="รถกระบะ4ประตู" data-img="https://via.placeholder.com/50?text=Car1">รถกระบะ4ประตู</option>
+            <option value="รถกระบะ4ประตู 2" data-img="https://via.placeholder.com/50?text=Car2">รถกระบะ4ประตู 2</option>
+            <option value="รถกระบะ4ประตู 3" data-img="https://via.placeholder.com/50?text=Car3">รถกระบะ4ประตู 3</option>
+            <option value="รถกระบะ4ประตู 4" data-img="https://via.placeholder.com/50?text=Car4">รถกระบะ4ประตู 4</option>
+            <option value="รถตู้ 1" data-img="https://via.placeholder.com/50?text=Car5">รถตู้ 1</option>
+            <option value="รถตู้ 2" data-img="https://via.placeholder.com/50?text=Car6">รถตู้ 2</option>
+            <option value="รถตู้ 3" data-img="https://via.placeholder.com/50?text=Car7">รถตู้ 3</option>
+            <option value="รถ8" data-img="https://via.placeholder.com/50?text=Car8">รถ8</option>
+            <option value="รถ9" data-img="https://via.placeholder.com/50?text=Car9">รถ9</option>
+        </select>
+
+        <label for="date">เลือกวันที่:</label>
+        <input type="date" id="date">
+
+        <label for="time">เลือกเวลา:</label>
+        <input type="time" id="time">
+
+        <button onclick="bookCar()">จองคิว</button>
+
+        <div class="status" id="status"></div>
+
+        <div class="booking-list" id="bookingList">
+            <h3>รายการจองรถ</h3>
+            <div id="bookingsContainer">ยังไม่มีการจอง</div>
+        </div>
+    </div>
+
+    <script>
+        // โหลดข้อมูลจาก localStorage
+        let bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+
+        function bookCar() {
+            const driverSelect = document.getElementById('driver');
+            const carSelect = document.getElementById('car');
+            const driver = driverSelect.value;
+            const car = carSelect.value;
+            const date = document.getElementById('date').value;
+            const time = document.getElementById('time').value;
+            const statusEl = document.getElementById('status');
+
+            if (!driver || !car || !date || !time) {
+                statusEl.textContent = "กรุณากรอกข้อมูลให้ครบทุกช่อง";
+                statusEl.className = "status booked";
+                return;
+            }
+
+            const exists = bookings.find(b => b.car === car && b.date === date && b.time === time);
+            if (exists) {
+                statusEl.textContent = `รถ ${car} ในเวลา ${time} วันที่ ${date} ไม่ว่าง`;
+                statusEl.className = "status booked";
+                return;
+            }
+
+            const driverImg = driverSelect.selectedOptions[0].dataset.img;
+            const driverPhone = driverSelect.selectedOptions[0].dataset.phone;
+            const carImg = carSelect.selectedOptions[0].dataset.img;
+
+            bookings.push({ driver, car, date, time, driverImg, driverPhone, carImg });
+
+            // บันทึกลง localStorage
+            localStorage.setItem('bookings', JSON.stringify(bookings));
+
+            statusEl.textContent = `จองสำเร็จ! คนขับ: ${driver}, รถ: ${car}, วันที่: ${date}, เวลา: ${time}`;
+            statusEl.className = "status available";
+
+            renderBookingList();
+        }
+
+        function cancelBooking(index) {
+            bookings.splice(index, 1);
+            localStorage.setItem('bookings', JSON.stringify(bookings));
+            renderBookingList();
+        }
+
+        function renderBookingList() {
+            const container = document.getElementById('bookingsContainer');
+            if (bookings.length === 0) {
+                container.innerHTML = "ยังไม่มีการจอง";
+                return;
+            }
+
+            container.innerHTML = '';
+            bookings.forEach((b, index) => {
+                const div = document.createElement('div');
+                div.className = 'booking-item';
+
+                const leftDiv = document.createElement('div');
+                leftDiv.className = 'booking-left';
+
+                const driverImg = document.createElement('img');
+                driverImg.src = b.driverImg;
+                driverImg.alt = b.driver;
+
+                const carImg = document.createElement('img');
+                carImg.src = b.carImg;
+                carImg.alt = b.car;
+
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'booking-info';
+                infoDiv.innerHTML = `
+                    <strong>${index + 1}. คนขับ: ${b.driver} (☎ ${b.driverPhone})</strong>
+                    <span>รถ: ${b.car}</span>
+                    <span>วันที่: ${b.date}, เวลา: ${b.time}</span>
+                `;
+
+                leftDiv.appendChild(driverImg);
+                leftDiv.appendChild(carImg);
+                leftDiv.appendChild(infoDiv);
+
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = 'cancel-btn';
+                cancelBtn.textContent = 'ยกเลิก';
+                cancelBtn.onclick = () => cancelBooking(index);
+
+                div.appendChild(leftDiv);
+                div.appendChild(cancelBtn);
+
+                container.appendChild(div);
+            });
+        }
+
+        // แสดงรายการจองทันทีเมื่อโหลดหน้าเว็บ
+        renderBookingList();
+    </script>
+</body>
+</html>
